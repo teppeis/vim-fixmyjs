@@ -49,22 +49,21 @@ endfun
 " @param {[String]} line2 The end line on which stop formating,
 " by default '$'
 func! Fixmyjs(...)
-  let winview = winsaveview()
-  let path = fnameescape(expand("%:p"))
-  let content = join(getline(1,'$'), "\n")
-
   let g:fixmyjs_executable = expand(g:fixmyjs_executable)
-  if executable(g:fixmyjs_executable)
-    let result = system(g:fixmyjs_executable." --fix-to-stdout -f unix --stdin --stdin-filename ".path, content)
-    silent exec "1,$j"
-    let lines = split(result, '\n')
-    call setline("1", lines[0])
-    call append("1", lines[1:])
-  else
+  if !executable(g:fixmyjs_executable)
     " Executable bin doesn't exist
     call ErrorMsg('The '.g:fixmyjs_executable.' is not executable!')
     return 1
   endif
+
+  let winview = winsaveview()
+  let path = fnameescape(expand("%:p"))
+  let content = join(getline(1,'$'), "\n")
+  let result = system(g:fixmyjs_executable." --fix-to-stdout --stdin --stdin-filename ".path, content)
+  silent exec "1,$j"
+  let lines = split(result, '\n')
+  call setline("1", lines[0])
+  call append("1", lines[1:])
 
   call winrestview(winview)
 endfun
