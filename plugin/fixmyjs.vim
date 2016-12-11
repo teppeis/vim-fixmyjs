@@ -205,9 +205,11 @@ func! Fixmyjs(...)
 
   let path = expand("%:p")
   let path = fnameescape(path)
-  let content = getline("1", "$")
+  " let content = getline("1", "$")
+  let content = join(getline(1,'$'), "\n")
   "let engine = 'fixmyjs'
-  call writefile(content, g:fixmyjs_tmp_file)
+  " call writefile(content, g:fixmyjs_tmp_file)
+  let result = ""
 
   let g:fixmyjs_executable = expand(g:fixmyjs_executable)
   if executable(g:fixmyjs_executable)
@@ -218,14 +220,17 @@ func! Fixmyjs(...)
           call system(g:fixmyjs_executable." -c ".g:fixmyjs_rc_path." ".g:fixmyjs_tmp_file)
       endif
     elseif g:fixmyjs_engine == 'eslint'
-      call system(g:fixmyjs_executable." -c ".g:fixmyjs_rc_path." --fix ".g:fixmyjs_tmp_file)
+      " call system(g:fixmyjs_executable." -c ".g:fixmyjs_rc_path." --fix ".g:fixmyjs_tmp_file)
+      let g:fixmyjs_executable = 'eslint_d'
+      let result = system(g:fixmyjs_executable." --fix-to-stdout -f unix --stdin --stdin-filename ".path, content)
     elseif g:fixmyjs_engine == 'jscs'
       call system(g:fixmyjs_executable." -c ".g:fixmyjs_rc_path." --fix ".g:fixmyjs_tmp_file)
     endif
 
-    let result = readfile(g:fixmyjs_tmp_file)
+    " let result = readfile(g:fixmyjs_tmp_file)
     "call writefile(result, path)
     silent exec "1,$j"
+    let result = split(result, '\n')
     call setline("1", result[0])
     call append("1", result[1:])
   else
