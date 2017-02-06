@@ -12,12 +12,8 @@ endif
 
 let g:fixmyjs_loaded = 1
 
-if !exists('g:fixmyjs_config')
-  let g:fixmyjs_config = {}
-endif
-
-if !exists('g:fixmyjs_executable')
-    let g:fixmyjs_executable = 'eslint_d'
+if !exists('g:fixmyjs_executables')
+  let g:fixmyjs_executables = {}
 endif
 
 " Function for debugging
@@ -49,17 +45,20 @@ endfun
 " @param {[String]} line2 The end line on which stop formating,
 " by default '$'
 func! Fixmyjs(...)
-  let g:fixmyjs_executable = expand(g:fixmyjs_executable)
-  if !executable(g:fixmyjs_executable)
-    " Executable bin doesn't exist
-    call ErrorMsg('The '.g:fixmyjs_executable.' is not executable!')
-    return 1
+  let path = fnameescape(expand("%:p"))
+  let eslint = g:fixmyjs_executables.path
+  if !executable(eslint)
+    eslint = system('PATH=$(npm bin):$PATH && which eslint_d')
+    if !executable(eslint)
+        " Executable bin doesn't exist
+        call ErrorMsg('Neither `eslint` nor `eslint_d` are executable!')
+        return 1
+    endif
   endif
 
   let winview = winsaveview()
-  let path = fnameescape(expand("%:p"))
   let content = join(getline(1,'$'), "\n")
-  let result = system(g:fixmyjs_executable." --fix-to-stdout --stdin --stdin-filename ".path, content)
+  let result = system(eslint." --fix-to-stdout --stdin --stdin-filename ".path, content)
   silent exec "1,$j"
   let lines = split(result, '\n')
   call setline("1", lines[0])
